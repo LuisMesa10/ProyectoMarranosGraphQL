@@ -1,7 +1,7 @@
 {
-  "name": "sistema-granja-frontend",
+  "name": "sistema-granja-frontend-graphql",
   "version": "1.0.0",
-  "description": "Sistema de Gestión Porcina - Frontend Vue.js",
+  "description": "Sistema de Gestión Porcina - Frontend Vue.js con GraphQL",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,10 @@
   "dependencies": {
     "vue": "^3.5.18",
     "vue-router": "^4.5.1",
-    "axios": "^1.11.0"
+    "@apollo/client": "^3.8.8",
+    "@vue/apollo-composable": "^4.0.0-beta.11",
+    "graphql": "^16.8.1",
+    "graphql-tag": "^2.12.6"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
@@ -29,6 +32,8 @@
   },
   "keywords": [
     "vue",
+    "graphql",
+    "apollo",
     "granja",
     "porcinos",
     "gestion",
@@ -38,6 +43,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LuisMesa10/ProyectoMarranos.git"
+    "url": "https://github.com/LuisMesa10/ProyectoMarranosGraphQL.git"
   }
 }

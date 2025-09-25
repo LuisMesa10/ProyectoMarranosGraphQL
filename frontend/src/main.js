@@ -1,44 +1,27 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
+
+// src/main.js
+import { createApp, provide, h } from 'vue';
+import { DefaultApolloClient } from '@vue/apollo-composable';
+import App from './App.vue';
+import router from './router';
+import apolloClient from '../apollo/apolloClient';
 
 // Crear la aplicación Vue
-const app = createApp(App)
+const app = createApp({
+  setup() {
+    // Proveer el cliente Apollo a toda la aplicación
+    provide(DefaultApolloClient, apolloClient);
+  },
+  render: () => h(App),
+});
 
-// Configurar Vue Router
-app.use(router)
+// Usar el router
+app.use(router);
 
-// Configuración global de propiedades
-app.config.globalProperties.$apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+// Montar la aplicación
+app.mount('#app');
 
-// Manejo global de errores no capturados
-app.config.errorHandler = (err, instance, info) => {
-  console.error('[Vue Error Handler]:', err, info)
-
-  // Aquí podrías enviar el error a un servicio de logging
-  // logError(err, { instance, info })
-}
-
-// Configuraciones de desarrollo
-if (import.meta.env.DEV) {
-  app.config.performance = true
-}
-
-// Montar la aplicación en el DOM
-app.mount('#app')
-
-// Configurar interceptor global para requests de red
-window.addEventListener('unhandledrejection', event => {
-  console.error('[Unhandled Promise Rejection]:', event.reason)
-
-  // Prevenir que aparezca en la consola del navegador si ya lo manejamos
-  event.preventDefault()
-})
-
-// Información de la aplicación en desarrollo
-if (import.meta.env.DEV) {
-  console.log('🐷 La Granja S.A. - Sistema de Gestión Porcina')
-  console.log('📊 Modo: Desarrollo')
-  console.log('🌐 API URL:', import.meta.env.VITE_API_URL || 'http://localhost:3000/api')
-  console.log('📱 Vue Version:', app.version)
-}
+// Manejo de errores global para Apollo
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('❌ Error no manejado:', event.reason);
+});
