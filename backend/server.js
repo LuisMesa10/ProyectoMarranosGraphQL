@@ -1,4 +1,3 @@
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require('cors');
@@ -12,84 +11,81 @@ const resolvers = require('./resolvers/index');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Variable para evitar inicialización múltiple
+let serverInitialized = false;
+
 // Middleware para JSON y CORS
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // URL del frontend Vue
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json());
 
-// Conexión a MongoDB
-mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/mi_base", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+// Conexión a MongoDB (sin opciones deprecadas)
+mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/mi_base")
+.then(() => {
+  if (!serverInitialized) {
+    console.log("✅ Conectado a MongoDB");
+  }
 })
-.then(() => console.log("✅ Conectado a MongoDB"))
 .catch(err => console.error("❌ Error de conexión:", err));
 
-// Función para inicializar el servidor Apollo
-async function startServer() {
-  // Crear servidor Apollo
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    // Habilitar introspection y playground en desarrollo
-    introspection: process.env.NODE_ENV !== 'production',
-    playground: process.env.NODE_ENV !== 'production',
-    // Context para pasar datos entre resolvers
-    context: ({ req }) => {
-      // Aquí puedes agregar información del usuario, tokens, etc.
-      return {
-        req,
-        // user: req.user, // Si usas autenticación
-      };
-    },
-    // Manejo de errores personalizado
-    formatError: (error) => {
-      console.error('❌ GraphQL Error:', error);
-      return {
-        message: error.message,
-        // En desarrollo, mostrar más detalles del error
-        ...(process.env.NODE_ENV === 'development' && {
-          locations: error.locations,
-          path: error.path,
-          stack: error.stack
-        })
-      };
-    }
-  });
-
-  // Inicializar el servidor Apollo
-  await server.start();
-
-  // Aplicar el middleware de Apollo al servidor Express
-  server.applyMiddleware({ 
-    app, 
-    path: '/graphql',  // El endpoint será http://localhost:3000/graphql
-    cors: false  // Ya tenemos CORS configurado arriba
-  });
-
-  console.log('🚀 Servidor GraphQL listo en http://localhost:\${PORT}\${server.graphqlPath}');
-}
-
-// OPCIONAL: Mantener las rutas REST existentes para migración gradual
-// Descomenta estas líneas si quieres mantener tanto GraphQL como REST
-/*
+// ========================================
+// RUTAS REST (MANTENIENDO FUNCIONAMIENTO ACTUAL)
+// ========================================
 app.use('/api/clientes', require('./routes/clienteRoute'));
 app.use('/api/alimentacion', require('./routes/alimentacionRoutes'));
 app.use('/api/porcinos', require('./routes/porcinoRoutes'));
-*/
 
-// Ruta de prueba para verificar que el servidor funciona
+// ========================================
+// APOLLO SERVER CONFIGURACIÓN
+// ========================================
+async function configureApollo() {
+  try {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      introspection: process.env.NODE_ENV !== 'production',
+      context: ({ req }) => ({ req }),
+      formatError: (error) => {
+        console.error('GraphQL Error:', error.message);
+        return {
+          message: error.message,
+          locations: error.locations || [],
+          path: error.path || []
+        };
+      }
+    });
+
+    await server.start();
+    server.applyMiddleware({ 
+      app, 
+      path: '/graphql',
+      cors: false // Ya tenemos CORS configurado globalmente
+    });
+
+    console.log("✅ GraphQL configurado en /graphql");
+    return true;
+  } catch (error) {
+    console.error("❌ Error configurando GraphQL:", error.message);
+    return false;
+  }
+}
+
+// Rutas básicas
 app.get('/', (req, res) => {
   res.json({ 
-    message: '🐷 API de La Granja S.A. funcionando',
-    graphql: `http://localhost:\${PORT}/graphql`,
+    message: 'API La Granja S.A. funcionando',
+    endpoints: {
+      clientes: 'http://localhost:' + PORT + '/api/clientes',
+      porcinos: 'http://localhost:' + PORT + '/api/porcinos', 
+      alimentacion: 'http://localhost:' + PORT + '/api/alimentacion',
+      graphql: 'http://localhost:' + PORT + '/graphql'
+    },
     status: 'OK'
   });
 });
 
-// Ruta para verificar la salud del servidor
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -98,31 +94,74 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Manejo de errores global
+// Manejo de errores
 app.use((error, req, res, next) => {
-  console.error('❌ Error del servidor:', error);
+  console.error('Error del servidor:', error.message);
   res.status(500).json({
-    message: 'Error interno del servidor',
-    ...(process.env.NODE_ENV === 'development' && { error: error.message })
+    message: 'Error interno del servidor'
   });
 });
 
-// Inicializar el servidor
-startServer().then(() => {
-  app.listen(PORT, () => {
-    console.log(`🚀 Servidor Express corriendo en http://localhost:\${PORT}`);
-    console.log(`📊 GraphQL Playground disponible en http://localhost:\${PORT}/graphql`);
-  });
-}).catch(error => {
-  console.error('❌ Error al inicializar el servidor:', error);
-  process.exit(1);
-});
+// ========================================
+// INICIALIZACIÓN DEL SERVIDOR
+// ========================================
+async function startServer() {
+  if (serverInitialized) {
+    return;
+  }
 
-// Manejo de cierre graceful
-process.on('SIGINT', async () => {
-  console.log('\n⏹️  Cerrando servidor...');
-  await mongoose.connection.close();
-  process.exit(0);
-});
+  serverInitialized = true;
+
+  try {
+    console.log('');
+    console.log('🚀 Iniciando La Granja S.A. API...');
+    console.log('');
+
+    // Configurar Apollo Server
+    const apolloReady = await configureApollo();
+
+    // Iniciar servidor Express
+    const server = app.listen(PORT, () => {
+      console.log('🎉 ==========================================');
+      console.log('🐷 LA GRANJA S.A. - SERVIDOR ACTIVO');
+      console.log('🎉 ==========================================');
+      console.log('');
+      console.log('🌐 Servidor corriendo en: http://localhost:' + PORT);
+      console.log('');
+      console.log('📋 ENDPOINTS REST:');
+      console.log('   • Clientes: http://localhost:' + PORT + '/api/clientes');
+      console.log('   • Porcinos: http://localhost:' + PORT + '/api/porcinos');
+      console.log('   • Alimentación: http://localhost:' + PORT + '/api/alimentacion');
+      console.log('');
+
+      if (apolloReady) {
+        console.log('🚀 ENDPOINT GRAPHQL:');
+        console.log('   • Apollo Sandbox: http://localhost:' + PORT + '/graphql');
+        console.log('');
+      }
+
+      console.log('🎉 ==========================================');
+      console.log('✅ Todos los servicios están funcionando correctamente');
+      console.log('🎉 ==========================================');
+      console.log('');
+    });
+
+    // Manejo de cierre graceful
+    process.on('SIGINT', async () => {
+      console.log('\n⏹️  Cerrando servidor...');
+      server.close();
+      await mongoose.connection.close();
+      console.log('✅ Servidor cerrado correctamente');
+      process.exit(0);
+    });
+
+  } catch (error) {
+    console.error('❌ Error fatal al iniciar servidor:', error.message);
+    process.exit(1);
+  }
+}
+
+// Inicializar servidor solo una vez
+startServer();
 
 module.exports = app;
