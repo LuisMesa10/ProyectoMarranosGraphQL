@@ -11,11 +11,10 @@ const resolvers = {
       try {
         const clientesRaw = await Cliente.find().sort({ createdAt: -1 });
 
-        // Mapear EXPLÍCITAMENTE cada cliente para asegurar que ID funciona
         return clientesRaw.map(cliente => {
           const clienteObj = cliente.toObject();
           return {
-            id: clienteObj._id.toString(), // ← CRÍTICO: Mapeo explícito de _id → id
+            id: clienteObj._id.toString(),
             nombre: clienteObj.nombre || (clienteObj.nombres && clienteObj.apellidos ? 
               `${clienteObj.nombres} ${clienteObj.apellidos}` : 
               clienteObj.nombres || clienteObj.apellidos || 'Sin nombre'),
@@ -45,7 +44,7 @@ const resolvers = {
 
         const clienteObj = cliente.toObject();
         return {
-          id: clienteObj._id.toString(), // ← CRÍTICO: Mapeo explícito
+          id: clienteObj._id.toString(),
           nombre: clienteObj.nombre || (clienteObj.nombres && clienteObj.apellidos ? 
             `${clienteObj.nombres} ${clienteObj.apellidos}` : 
             clienteObj.nombres || clienteObj.apellidos || 'Sin nombre'),
@@ -75,7 +74,7 @@ const resolvers = {
           if (cantidadPorcinos > 0) {
             const clienteObj = cliente.toObject();
             clientesConPorcinos.push({
-              id: clienteObj._id.toString(), // ← CRÍTICO: Mapeo explícito
+              id: clienteObj._id.toString(),
               nombre: clienteObj.nombre || (clienteObj.nombres && clienteObj.apellidos ? 
                 `${clienteObj.nombres} ${clienteObj.apellidos}` : 
                 clienteObj.nombres || clienteObj.apellidos || 'Sin nombre'),
@@ -99,21 +98,19 @@ const resolvers = {
     // ===== PORCINOS =====
     porcinos: async () => {
       try {
-        const porcinosRaw = await Porcino.find()
-          .populate('clienteId', 'nombre nombres apellidos telefono')
-          .populate('alimentacionId', 'tipoComida marca descripcion')
-          .sort({ createdAt: -1 });
+        // NO hacer populate aquí, lo manejaremos en los resolvers específicos
+        const porcinosRaw = await Porcino.find().sort({ createdAt: -1 });
 
         return porcinosRaw.map(porcino => {
           const porcinoObj = porcino.toObject();
           return {
-            id: porcinoObj._id.toString(), // ← CRÍTICO: Mapeo explícito
+            id: porcinoObj._id.toString(),
             identificacion: porcinoObj.identificacion,
             raza: porcinoObj.raza,
             edad: porcinoObj.edad,
             peso: porcinoObj.peso,
-            clienteId: porcinoObj.clienteId.toString(),
-            alimentacionId: porcinoObj.alimentacionId.toString(),
+            clienteId: porcinoObj.clienteId ? porcinoObj.clienteId.toString() : null,
+            alimentacionId: porcinoObj.alimentacionId ? porcinoObj.alimentacionId.toString() : null,
             createdAt: porcinoObj.createdAt,
             updatedAt: porcinoObj.updatedAt
           };
@@ -126,9 +123,7 @@ const resolvers = {
 
     porcino: async (_, { id }) => {
       try {
-        const porcino = await Porcino.findById(id)
-          .populate('clienteId')
-          .populate('alimentacionId');
+        const porcino = await Porcino.findById(id);
 
         if (!porcino) {
           throw new Error('Porcino no encontrado');
@@ -136,13 +131,13 @@ const resolvers = {
 
         const porcinoObj = porcino.toObject();
         return {
-          id: porcinoObj._id.toString(), // ← CRÍTICO: Mapeo explícito
+          id: porcinoObj._id.toString(),
           identificacion: porcinoObj.identificacion,
           raza: porcinoObj.raza,
           edad: porcinoObj.edad,
           peso: porcinoObj.peso,
-          clienteId: porcinoObj.clienteId.toString(),
-          alimentacionId: porcinoObj.alimentacionId.toString(),
+          clienteId: porcinoObj.clienteId ? porcinoObj.clienteId.toString() : null,
+          alimentacionId: porcinoObj.alimentacionId ? porcinoObj.alimentacionId.toString() : null,
           createdAt: porcinoObj.createdAt,
           updatedAt: porcinoObj.updatedAt
         };
@@ -154,21 +149,18 @@ const resolvers = {
 
     porcinosPorCliente: async (_, { clienteId }) => {
       try {
-        const porcinosRaw = await Porcino.find({ clienteId })
-          .populate('clienteId')
-          .populate('alimentacionId')
-          .sort({ createdAt: -1 });
+        const porcinosRaw = await Porcino.find({ clienteId }).sort({ createdAt: -1 });
 
         return porcinosRaw.map(porcino => {
           const porcinoObj = porcino.toObject();
           return {
-            id: porcinoObj._id.toString(), // ← CRÍTICO: Mapeo explícito
+            id: porcinoObj._id.toString(),
             identificacion: porcinoObj.identificacion,
             raza: porcinoObj.raza,
             edad: porcinoObj.edad,
             peso: porcinoObj.peso,
-            clienteId: porcinoObj.clienteId.toString(),
-            alimentacionId: porcinoObj.alimentacionId.toString(),
+            clienteId: porcinoObj.clienteId ? porcinoObj.clienteId.toString() : null,
+            alimentacionId: porcinoObj.alimentacionId ? porcinoObj.alimentacionId.toString() : null,
             createdAt: porcinoObj.createdAt,
             updatedAt: porcinoObj.updatedAt
           };
@@ -181,21 +173,18 @@ const resolvers = {
 
     porcinosPorRaza: async (_, { raza }) => {
       try {
-        const porcinosRaw = await Porcino.find({ raza })
-          .populate('clienteId', 'nombre nombres apellidos')
-          .populate('alimentacionId', 'tipoComida descripcion marca')
-          .sort({ createdAt: -1 });
+        const porcinosRaw = await Porcino.find({ raza }).sort({ createdAt: -1 });
 
         return porcinosRaw.map(porcino => {
           const porcinoObj = porcino.toObject();
           return {
-            id: porcinoObj._id.toString(), // ← CRÍTICO: Mapeo explícito
+            id: porcinoObj._id.toString(),
             identificacion: porcinoObj.identificacion,
             raza: porcinoObj.raza,
             edad: porcinoObj.edad,
             peso: porcinoObj.peso,
-            clienteId: porcinoObj.clienteId.toString(),
-            alimentacionId: porcinoObj.alimentacionId.toString(),
+            clienteId: porcinoObj.clienteId ? porcinoObj.clienteId.toString() : null,
+            alimentacionId: porcinoObj.alimentacionId ? porcinoObj.alimentacionId.toString() : null,
             createdAt: porcinoObj.createdAt,
             updatedAt: porcinoObj.updatedAt
           };
@@ -214,7 +203,7 @@ const resolvers = {
         return alimentacionesRaw.map(alimentacion => {
           const alimentacionObj = alimentacion.toObject();
           return {
-            id: alimentacionObj._id.toString(), // ← CRÍTICO: Mapeo explícito
+            id: alimentacionObj._id.toString(),
             tipoComida: alimentacionObj.tipoComida || alimentacionObj.descripcion || 'Sin especificar',
             marca: alimentacionObj.marca || 'Sin especificar',
             cantidad: alimentacionObj.cantidad || 0,
@@ -240,7 +229,7 @@ const resolvers = {
 
         const alimentacionObj = alimentacion.toObject();
         return {
-          id: alimentacionObj._id.toString(), // ← CRÍTICO: Mapeo explícito
+          id: alimentacionObj._id.toString(),
           tipoComida: alimentacionObj.tipoComida || alimentacionObj.descripcion || 'Sin especificar',
           marca: alimentacionObj.marca || 'Sin especificar',
           cantidad: alimentacionObj.cantidad || 0,
@@ -262,17 +251,14 @@ const resolvers = {
     // ===== CLIENTES =====
     crearCliente: async (_, { input }) => {
       try {
-        // Procesamiento mejorado de input
         const clienteData = { ...input };
 
-        // Si se proporciona nombre pero no nombres/apellidos, dividir
         if (clienteData.nombre && !clienteData.nombres && !clienteData.apellidos) {
           const partes = clienteData.nombre.split(' ');
           clienteData.nombres = partes[0] || '';
           clienteData.apellidos = partes.slice(1).join(' ') || '';
         }
 
-        // Si se proporciona nombres/apellidos pero no nombre, combinar
         if (!clienteData.nombre && (clienteData.nombres || clienteData.apellidos)) {
           clienteData.nombre = `${clienteData.nombres || ''} ${clienteData.apellidos || ''}`.trim();
         }
@@ -282,7 +268,7 @@ const resolvers = {
         const clienteObj = clienteGuardado.toObject();
 
         return {
-          id: clienteObj._id.toString(), // ← CRÍTICO: Mapeo explícito
+          id: clienteObj._id.toString(),
           nombre: clienteObj.nombre || `${clienteObj.nombres || ''} ${clienteObj.apellidos || ''}`.trim(),
           telefono: clienteObj.telefono || '',
           email: clienteObj.email || '',
@@ -317,7 +303,7 @@ const resolvers = {
 
         const clienteObj = cliente.toObject();
         return {
-          id: clienteObj._id.toString(), // ← CRÍTICO: Mapeo explícito
+          id: clienteObj._id.toString(),
           nombre: clienteObj.nombre || `${clienteObj.nombres || ''} ${clienteObj.apellidos || ''}`.trim(),
           telefono: clienteObj.telefono || '',
           email: clienteObj.email || '',
@@ -337,7 +323,6 @@ const resolvers = {
 
     eliminarCliente: async (_, { id }) => {
       try {
-        // Verificar si el cliente tiene porcinos asociados
         const cantidadPorcinos = await Porcino.countDocuments({ clienteId: id });
 
         if (cantidadPorcinos > 0) {
@@ -357,9 +342,6 @@ const resolvers = {
       }
     },
 
-    // Mutations de Porcinos y Alimentaciones siguen igual pero con mapeo de ID
-    // [Resto de mutations con el mismo patrón de mapeo de ID]
-
     // ===== PORCINOS =====
     crearPorcino: async (_, { input }) => {
       try {
@@ -378,7 +360,7 @@ const resolvers = {
         const porcinoObj = porcinoGuardado.toObject();
 
         return {
-          id: porcinoObj._id.toString(), // ← CRÍTICO: Mapeo explícito
+          id: porcinoObj._id.toString(),
           identificacion: porcinoObj.identificacion,
           raza: porcinoObj.raza,
           edad: porcinoObj.edad,
@@ -397,46 +379,6 @@ const resolvers = {
       }
     },
 
-    // ===== ALIMENTACIÓN =====
-    crearAlimentacion: async (_, { input }) => {
-      try {
-        const alimentacionData = { ...input };
-
-        // Mapear campos automáticamente
-        if (alimentacionData.descripcion && !alimentacionData.tipoComida) {
-          alimentacionData.tipoComida = alimentacionData.descripcion;
-        }
-
-        if (alimentacionData.tipoComida && !alimentacionData.descripcion) {
-          alimentacionData.descripcion = alimentacionData.tipoComida;
-        }
-
-        if (!alimentacionData.marca && alimentacionData.tipoComida) {
-          alimentacionData.marca = 'Sin especificar';
-        }
-
-        const nuevaAlimentacion = new Alimentacion(alimentacionData);
-        const alimentacionGuardada = await nuevaAlimentacion.save();
-        const alimentacionObj = alimentacionGuardada.toObject();
-
-        return {
-          id: alimentacionObj._id.toString(), // ← CRÍTICO: Mapeo explícito
-          tipoComida: alimentacionObj.tipoComida || alimentacionObj.descripcion || 'Sin especificar',
-          marca: alimentacionObj.marca || 'Sin especificar',
-          cantidad: alimentacionObj.cantidad || 0,
-          precio: alimentacionObj.precio || 0,
-          descripcion: alimentacionObj.descripcion || alimentacionObj.tipoComida || '',
-          dosis: alimentacionObj.dosis || '',
-          createdAt: alimentacionObj.createdAt,
-          updatedAt: alimentacionObj.updatedAt
-        };
-      } catch (error) {
-        console.error('Error en crearAlimentacion mutation:', error.message);
-        throw new Error('Error al crear alimentación: ' + error.message);
-      }
-    },
-
-    // [Agregar resto de mutations con el mismo patrón...]
     actualizarPorcino: async (_, { id, input }) => {
       try {
         if (input.alimentacionId) {
@@ -486,6 +428,44 @@ const resolvers = {
       } catch (error) {
         console.error('Error en eliminarPorcino mutation:', error.message);
         throw new Error('Error al eliminar porcino: ' + error.message);
+      }
+    },
+
+    // ===== ALIMENTACIÓN =====
+    crearAlimentacion: async (_, { input }) => {
+      try {
+        const alimentacionData = { ...input };
+
+        if (alimentacionData.descripcion && !alimentacionData.tipoComida) {
+          alimentacionData.tipoComida = alimentacionData.descripcion;
+        }
+
+        if (alimentacionData.tipoComida && !alimentacionData.descripcion) {
+          alimentacionData.descripcion = alimentacionData.tipoComida;
+        }
+
+        if (!alimentacionData.marca && alimentacionData.tipoComida) {
+          alimentacionData.marca = 'Sin especificar';
+        }
+
+        const nuevaAlimentacion = new Alimentacion(alimentacionData);
+        const alimentacionGuardada = await nuevaAlimentacion.save();
+        const alimentacionObj = alimentacionGuardada.toObject();
+
+        return {
+          id: alimentacionObj._id.toString(),
+          tipoComida: alimentacionObj.tipoComida || alimentacionObj.descripcion || 'Sin especificar',
+          marca: alimentacionObj.marca || 'Sin especificar',
+          cantidad: alimentacionObj.cantidad || 0,
+          precio: alimentacionObj.precio || 0,
+          descripcion: alimentacionObj.descripcion || alimentacionObj.tipoComida || '',
+          dosis: alimentacionObj.dosis || '',
+          createdAt: alimentacionObj.createdAt,
+          updatedAt: alimentacionObj.updatedAt
+        };
+      } catch (error) {
+        console.error('Error en crearAlimentacion mutation:', error.message);
+        throw new Error('Error al crear alimentación: ' + error.message);
       }
     },
 
@@ -541,12 +521,11 @@ const resolvers = {
     },
   },
 
-  // Resolvers de campos - Para manejar relaciones entre tipos
+  // ============ RESOLVERS DE CAMPOS - CRÍTICO PARA RELACIONES ============
   Cliente: {
     porcinos: async (cliente) => {
       try {
-        const porcinosRaw = await Porcino.find({ clienteId: cliente.id })
-          .populate('alimentacionId');
+        const porcinosRaw = await Porcino.find({ clienteId: cliente.id });
 
         return porcinosRaw.map(porcino => {
           const porcinoObj = porcino.toObject();
@@ -557,7 +536,7 @@ const resolvers = {
             edad: porcinoObj.edad,
             peso: porcinoObj.peso,
             clienteId: porcinoObj.clienteId.toString(),
-            alimentacionId: porcinoObj.alimentacionId.toString(),
+            alimentacionId: porcinoObj.alimentacionId ? porcinoObj.alimentacionId.toString() : null,
             createdAt: porcinoObj.createdAt,
             updatedAt: porcinoObj.updatedAt
           };
@@ -578,11 +557,33 @@ const resolvers = {
     },
   },
 
+  // ============ RESOLVER CORREGIDO PARA PORCINO ============
   Porcino: {
     cliente: async (porcino) => {
       try {
-        const cliente = await Cliente.findById(porcino.clienteId);
-        if (!cliente) return null;
+        // CRÍTICO: Extraer ID correctamente
+        let clienteId = porcino.clienteId;
+
+        // Si clienteId es un objeto (populated), extraer el _id
+        if (typeof clienteId === 'object' && clienteId !== null) {
+          clienteId = clienteId._id || clienteId.id;
+        }
+
+        // Convertir a string si es necesario
+        if (clienteId) {
+          clienteId = clienteId.toString();
+        }
+
+        if (!clienteId) {
+          console.log(`⚠️ Porcino ${porcino.identificacion} no tiene clienteId válido`);
+          return null;
+        }
+
+        const cliente = await Cliente.findById(clienteId);
+        if (!cliente) {
+          console.log(`⚠️ Cliente ${clienteId} no encontrado para porcino ${porcino.identificacion}`);
+          return null;
+        }
 
         const clienteObj = cliente.toObject();
         return {
@@ -601,10 +602,33 @@ const resolvers = {
       }
     },
 
+    // ============ RESOLVER CRÍTICO CORREGIDO ============
     alimentacion: async (porcino) => {
       try {
-        const alimentacion = await Alimentacion.findById(porcino.alimentacionId);
-        if (!alimentacion) return null;
+        // CRÍTICO: Extraer ID correctamente
+        let alimentacionId = porcino.alimentacionId;
+
+        // Si alimentacionId es un objeto (populated), extraer el _id
+        if (typeof alimentacionId === 'object' && alimentacionId !== null) {
+          alimentacionId = alimentacionId._id || alimentacionId.id;
+        }
+
+        // Convertir a string si es necesario
+        if (alimentacionId) {
+          alimentacionId = alimentacionId.toString();
+        }
+
+        // Verificar que no sea string vacío
+        if (!alimentacionId || alimentacionId === '' || alimentacionId === 'null' || alimentacionId === 'undefined') {
+          console.log(`⚠️ Porcino ${porcino.identificacion} no tiene alimentacionId válido: "${alimentacionId}"`);
+          return null;
+        }
+
+        const alimentacion = await Alimentacion.findById(alimentacionId);
+        if (!alimentacion) {
+          console.log(`⚠️ Alimentación ${alimentacionId} no encontrada para porcino ${porcino.identificacion}`);
+          return null;
+        }
 
         const alimentacionObj = alimentacion.toObject();
         return {
@@ -613,11 +637,16 @@ const resolvers = {
           marca: alimentacionObj.marca || 'Sin especificar',
           cantidad: alimentacionObj.cantidad || 0,
           precio: alimentacionObj.precio || 0,
+          descripcion: alimentacionObj.descripcion || alimentacionObj.tipoComida || '',
+          dosis: alimentacionObj.dosis || '',
           createdAt: alimentacionObj.createdAt,
           updatedAt: alimentacionObj.updatedAt
         };
       } catch (error) {
         console.error('Error en Porcino.alimentacion resolver:', error.message);
+        console.error('  - Porcino ID:', porcino.id);
+        console.error('  - AlimentacionId recibido:', porcino.alimentacionId);
+        console.error('  - Tipo de alimentacionId:', typeof porcino.alimentacionId);
         return null;
       }
     },
@@ -635,8 +664,7 @@ const resolvers = {
   Alimentacion: {
     porcinos: async (alimentacion) => {
       try {
-        const porcinosRaw = await Porcino.find({ alimentacionId: alimentacion.id })
-          .populate('clienteId');
+        const porcinosRaw = await Porcino.find({ alimentacionId: alimentacion.id });
 
         return porcinosRaw.map(porcino => {
           const porcinoObj = porcino.toObject();
