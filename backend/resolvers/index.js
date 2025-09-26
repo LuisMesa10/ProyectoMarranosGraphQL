@@ -11,7 +11,8 @@ const resolvers = {
       try {
         return await Cliente.find().sort({ createdAt: -1 });
       } catch (error) {
-        throw new Error(`Error al obtener clientes: ${error.message}`);
+        console.error('Error en clientes query:', error.message);
+        throw new Error('Error al obtener clientes: ' + error.message);
       }
     },
 
@@ -23,7 +24,8 @@ const resolvers = {
         }
         return cliente;
       } catch (error) {
-        throw new Error(`Error al obtener cliente: ${error.message}`);
+        console.error('Error en cliente query:', error.message);
+        throw new Error('Error al obtener cliente: ' + error.message);
       }
     },
 
@@ -44,7 +46,8 @@ const resolvers = {
 
         return clientesConPorcinos;
       } catch (error) {
-        throw new Error(`Error al obtener clientes con porcinos: ${error.message}`);
+        console.error('Error en clientesConPorcinos query:', error.message);
+        throw new Error('Error al obtener clientes con porcinos: ' + error.message);
       }
     },
 
@@ -52,11 +55,12 @@ const resolvers = {
     porcinos: async () => {
       try {
         return await Porcino.find()
-          .populate('clienteId', 'nombre telefono')
-          .populate('alimentacionId', 'tipoComida marca')
+          .populate('clienteId', 'nombre nombres apellidos telefono')
+          .populate('alimentacionId', 'tipoComida marca descripcion')
           .sort({ createdAt: -1 });
       } catch (error) {
-        throw new Error(`Error al obtener porcinos: ${error.message}`);
+        console.error('Error en porcinos query:', error.message);
+        throw new Error('Error al obtener porcinos: ' + error.message);
       }
     },
 
@@ -71,7 +75,8 @@ const resolvers = {
         }
         return porcino;
       } catch (error) {
-        throw new Error(`Error al obtener porcino: ${error.message}`);
+        console.error('Error en porcino query:', error.message);
+        throw new Error('Error al obtener porcino: ' + error.message);
       }
     },
 
@@ -82,18 +87,20 @@ const resolvers = {
           .populate('alimentacionId')
           .sort({ createdAt: -1 });
       } catch (error) {
-        throw new Error(`Error al obtener porcinos por cliente: ${error.message}`);
+        console.error('Error en porcinosPorCliente query:', error.message);
+        throw new Error('Error al obtener porcinos por cliente: ' + error.message);
       }
     },
 
     porcinosPorRaza: async (_, { raza }) => {
       try {
         return await Porcino.find({ raza })
-          .populate('clienteId', 'nombre')
-          .populate('alimentacionId', 'tipoComida marca')
+          .populate('clienteId', 'nombre nombres apellidos')
+          .populate('alimentacionId', 'tipoComida descripcion marca')
           .sort({ createdAt: -1 });
       } catch (error) {
-        throw new Error(`Error al obtener porcinos por raza: ${error.message}`);
+        console.error('Error en porcinosPorRaza query:', error.message);
+        throw new Error('Error al obtener porcinos por raza: ' + error.message);
       }
     },
 
@@ -102,7 +109,8 @@ const resolvers = {
       try {
         return await Alimentacion.find().sort({ createdAt: -1 });
       } catch (error) {
-        throw new Error(`Error al obtener alimentaciones: ${error.message}`);
+        console.error('Error en alimentaciones query:', error.message);
+        throw new Error('Error al obtener alimentaciones: ' + error.message);
       }
     },
 
@@ -114,7 +122,8 @@ const resolvers = {
         }
         return alimentacion;
       } catch (error) {
-        throw new Error(`Error al obtener alimentación: ${error.message}`);
+        console.error('Error en alimentacion query:', error.message);
+        throw new Error('Error al obtener alimentación: ' + error.message);
       }
     },
   },
@@ -124,13 +133,19 @@ const resolvers = {
     // ===== CLIENTES =====
     crearCliente: async (_, { input }) => {
       try {
+        // Asegurar que al menos tengamos algo de información
+        if (!input.nombre && !input.nombres && !input.cedula) {
+          throw new Error('Debe proporcionar al menos nombre, nombres o cedula');
+        }
+
         const nuevoCliente = new Cliente(input);
         return await nuevoCliente.save();
       } catch (error) {
+        console.error('Error en crearCliente mutation:', error.message);
         if (error.code === 11000) {
-          throw new Error('Ya existe un cliente con este email');
+          throw new Error('Ya existe un cliente con estos datos');
         }
-        throw new Error(`Error al crear cliente: ${error.message}`);
+        throw new Error('Error al crear cliente: ' + error.message);
       }
     },
 
@@ -147,7 +162,8 @@ const resolvers = {
         }
         return cliente;
       } catch (error) {
-        throw new Error(`Error al actualizar cliente: ${error.message}`);
+        console.error('Error en actualizarCliente mutation:', error.message);
+        throw new Error('Error al actualizar cliente: ' + error.message);
       }
     },
 
@@ -157,7 +173,7 @@ const resolvers = {
         const cantidadPorcinos = await Porcino.countDocuments({ clienteId: id });
 
         if (cantidadPorcinos > 0) {
-          throw new Error(`No se puede eliminar el cliente porque tiene ${cantidadPorcinos} porcino(s) asociado(s)`);
+          throw new Error('No se puede eliminar el cliente porque tiene ' + cantidadPorcinos + ' porcino(s) asociado(s)');
         }
 
         const cliente = await Cliente.findByIdAndDelete(id);
@@ -168,7 +184,8 @@ const resolvers = {
 
         return true;
       } catch (error) {
-        throw new Error(`Error al eliminar cliente: ${error.message}`);
+        console.error('Error en eliminarCliente mutation:', error.message);
+        throw new Error('Error al eliminar cliente: ' + error.message);
       }
     },
 
@@ -189,10 +206,11 @@ const resolvers = {
         const nuevoPorcino = new Porcino(input);
         return await nuevoPorcino.save();
       } catch (error) {
+        console.error('Error en crearPorcino mutation:', error.message);
         if (error.code === 11000) {
           throw new Error('Ya existe un porcino con esta identificación');
         }
-        throw new Error(`Error al crear porcino: ${error.message}`);
+        throw new Error('Error al crear porcino: ' + error.message);
       }
     },
 
@@ -217,7 +235,8 @@ const resolvers = {
         }
         return porcino;
       } catch (error) {
-        throw new Error(`Error al actualizar porcino: ${error.message}`);
+        console.error('Error en actualizarPorcino mutation:', error.message);
+        throw new Error('Error al actualizar porcino: ' + error.message);
       }
     },
 
@@ -231,7 +250,8 @@ const resolvers = {
 
         return true;
       } catch (error) {
-        throw new Error(`Error al eliminar porcino: ${error.message}`);
+        console.error('Error en eliminarPorcino mutation:', error.message);
+        throw new Error('Error al eliminar porcino: ' + error.message);
       }
     },
 
@@ -241,7 +261,8 @@ const resolvers = {
         const nuevaAlimentacion = new Alimentacion(input);
         return await nuevaAlimentacion.save();
       } catch (error) {
-        throw new Error(`Error al crear alimentación: ${error.message}`);
+        console.error('Error en crearAlimentacion mutation:', error.message);
+        throw new Error('Error al crear alimentación: ' + error.message);
       }
     },
 
@@ -258,7 +279,8 @@ const resolvers = {
         }
         return alimentacion;
       } catch (error) {
-        throw new Error(`Error al actualizar alimentación: ${error.message}`);
+        console.error('Error en actualizarAlimentacion mutation:', error.message);
+        throw new Error('Error al actualizar alimentación: ' + error.message);
       }
     },
 
@@ -268,7 +290,7 @@ const resolvers = {
         const cantidadPorcinos = await Porcino.countDocuments({ alimentacionId: id });
 
         if (cantidadPorcinos > 0) {
-          throw new Error(`No se puede eliminar la alimentación porque está siendo usada por ${cantidadPorcinos} porcino(s)`);
+          throw new Error('No se puede eliminar la alimentación porque está siendo usada por ' + cantidadPorcinos + ' porcino(s)');
         }
 
         const alimentacion = await Alimentacion.findByIdAndDelete(id);
@@ -279,7 +301,8 @@ const resolvers = {
 
         return true;
       } catch (error) {
-        throw new Error(`Error al eliminar alimentación: ${error.message}`);
+        console.error('Error en eliminarAlimentacion mutation:', error.message);
+        throw new Error('Error al eliminar alimentación: ' + error.message);
       }
     },
   },
@@ -291,6 +314,7 @@ const resolvers = {
         return await Porcino.find({ clienteId: cliente.id })
           .populate('alimentacionId');
       } catch (error) {
+        console.error('Error en Cliente.porcinos resolver:', error.message);
         return [];
       }
     },
@@ -299,6 +323,7 @@ const resolvers = {
       try {
         return await Porcino.countDocuments({ clienteId: cliente.id });
       } catch (error) {
+        console.error('Error en Cliente.cantidadPorcinos resolver:', error.message);
         return 0;
       }
     },
@@ -309,6 +334,7 @@ const resolvers = {
       try {
         return await Cliente.findById(porcino.clienteId);
       } catch (error) {
+        console.error('Error en Porcino.cliente resolver:', error.message);
         return null;
       }
     },
@@ -317,6 +343,7 @@ const resolvers = {
       try {
         return await Alimentacion.findById(porcino.alimentacionId);
       } catch (error) {
+        console.error('Error en Porcino.alimentacion resolver:', error.message);
         return null;
       }
     },
@@ -337,6 +364,7 @@ const resolvers = {
         return await Porcino.find({ alimentacionId: alimentacion.id })
           .populate('clienteId');
       } catch (error) {
+        console.error('Error en Alimentacion.porcinos resolver:', error.message);
         return [];
       }
     },

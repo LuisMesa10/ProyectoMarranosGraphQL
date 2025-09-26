@@ -1,3 +1,4 @@
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require('cors');
@@ -14,14 +15,20 @@ const PORT = process.env.PORT || 3000;
 // Variable para evitar inicialización múltiple
 let serverInitialized = false;
 
-// Middleware para JSON y CORS
+// CORS específico para Apollo
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'https://studio.apollographql.com',
+    'http://localhost:3000'
+  ],
   credentials: true
 }));
-app.use(express.json());
 
-// Conexión a MongoDB (sin opciones deprecadas)
+// CRÍTICO: NO usar express.json() aquí para evitar conflictos
+// Apollo Server manejará su propio body parsing
+
+// Conexión a MongoDB
 mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/mi_base")
 .then(() => {
   if (!serverInitialized) {
@@ -31,21 +38,30 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/mi_base")
 .catch(err => console.error("❌ Error de conexión:", err));
 
 // ========================================
-// RUTAS REST (MANTENIENDO FUNCIONAMIENTO ACTUAL)
+// RUTAS REST CON BODY PARSING ESPECÍFICO
 // ========================================
-app.use('/api/clientes', require('./routes/clienteRoute'));
-app.use('/api/alimentacion', require('./routes/alimentacionRoutes'));
-app.use('/api/porcinos', require('./routes/porcinoRoutes'));
+// Solo para rutas REST, usar body parsing específico
+const restRouter = express.Router();
+restRouter.use(express.json({ limit: '10mb' }));
+
+// Aplicar rutas REST al router específico
+restRouter.use('/clientes', require('./routes/clienteRoute'));
+restRouter.use('/alimentacion', require('./routes/alimentacionRoutes'));
+restRouter.use('/porcinos', require('./routes/porcinoRoutes'));
+
+// Montar el router REST en /api
+app.use('/api', restRouter);
 
 // ========================================
-// APOLLO SERVER CONFIGURACIÓN
+// APOLLO SERVER SIN CONFLICTOS DE BODY PARSER
 // ========================================
 async function configureApollo() {
   try {
     const server = new ApolloServer({
       typeDefs,
       resolvers,
-      introspection: process.env.NODE_ENV !== 'production',
+      introspection: true,
+      // CRÍTICO: Configuración específica para evitar stream errors
       context: ({ req }) => ({ req }),
       formatError: (error) => {
         console.error('GraphQL Error:', error.message);
@@ -58,16 +74,21 @@ async function configureApollo() {
     });
 
     await server.start();
+
+    // CRÍTICO: Aplicar middleware SIN body parser config
     server.applyMiddleware({ 
       app, 
       path: '/graphql',
-      cors: false // Ya tenemos CORS configurado globalmente
+      cors: false, // Ya configurado globalmente
+      // NO especificar bodyParserConfig para evitar conflictos
     });
 
     console.log("✅ GraphQL configurado en /graphql");
+    console.log("🌐 GraphQL URL: http://localhost:" + PORT + "/graphql");
     return true;
   } catch (error) {
     console.error("❌ Error configurando GraphQL:", error.message);
+    console.error("Stack:", error.stack);
     return false;
   }
 }
@@ -77,9 +98,11 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'API La Granja S.A. funcionando',
     endpoints: {
-      clientes: 'http://localhost:' + PORT + '/api/clientes',
-      porcinos: 'http://localhost:' + PORT + '/api/porcinos', 
-      alimentacion: 'http://localhost:' + PORT + '/api/alimentacion',
+      rest: {
+        clientes: 'http://localhost:' + PORT + '/api/clientes',
+        porcinos: 'http://localhost:' + PORT + '/api/porcinos',
+        alimentacion: 'http://localhost:' + PORT + '/api/alimentacion'
+      },
       graphql: 'http://localhost:' + PORT + '/graphql'
     },
     status: 'OK'
@@ -129,19 +152,20 @@ async function startServer() {
       console.log('🌐 Servidor corriendo en: http://localhost:' + PORT);
       console.log('');
       console.log('📋 ENDPOINTS REST:');
-      console.log('   • Clientes: http://localhost:' + PORT + '/api/clientes');
-      console.log('   • Porcinos: http://localhost:' + PORT + '/api/porcinos');
-      console.log('   • Alimentación: http://localhost:' + PORT + '/api/alimentacion');
+      console.log('   • http://localhost:' + PORT + '/api/clientes');
+      console.log('   • http://localhost:' + PORT + '/api/porcinos');
+      console.log('   • http://localhost:' + PORT + '/api/alimentacion');
       console.log('');
 
       if (apolloReady) {
         console.log('🚀 ENDPOINT GRAPHQL:');
-        console.log('   • Apollo Sandbox: http://localhost:' + PORT + '/graphql');
+        console.log('   • http://localhost:' + PORT + '/graphql');
+        console.log('   • Apollo Sandbox funcionará SIN errores de stream');
         console.log('');
       }
 
       console.log('🎉 ==========================================');
-      console.log('✅ Todos los servicios están funcionando correctamente');
+      console.log('✅ Body parser conflicts RESUELTOS');
       console.log('🎉 ==========================================');
       console.log('');
     });
@@ -161,7 +185,7 @@ async function startServer() {
   }
 }
 
-// Inicializar servidor solo una vez
+// Inicializar servidor
 startServer();
 
 module.exports = app;

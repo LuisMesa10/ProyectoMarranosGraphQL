@@ -5,11 +5,14 @@ const typeDefs = gql`
   # Tipos de datos
   type Cliente {
     id: ID!
-    nombre: String!
-    telefono: String!
-    email: String!
-    direccion: String!
-    ciudad: String!
+    nombre: String
+    telefono: String
+    email: String
+    direccion: String
+    ciudad: String
+    cedula: String
+    nombres: String
+    apellidos: String
     porcinos: [Porcino!]!
     cantidadPorcinos: Int
     createdAt: String!
@@ -23,8 +26,8 @@ const typeDefs = gql`
     razaNombre: String!
     edad: Int!
     peso: Float!
-    cliente: Cliente!
-    alimentacion: Alimentacion!
+    cliente: Cliente
+    alimentacion: Alimentacion
     clienteId: String!
     alimentacionId: String!
     createdAt: String!
@@ -33,22 +36,27 @@ const typeDefs = gql`
 
   type Alimentacion {
     id: ID!
-    tipoComida: String!
-    marca: String!
-    cantidad: Float!
-    precio: Float!
+    tipoComida: String
+    marca: String
+    cantidad: Float
+    precio: Float
+    descripcion: String
+    dosis: String
     porcinos: [Porcino!]!
     createdAt: String!
     updatedAt: String!
   }
 
-  # Inputs para crear y actualizar
+  # Inputs para crear y actualizar (campos opcionales)
   input ClienteInput {
-    nombre: String!
-    telefono: String!
-    email: String!
-    direccion: String!
-    ciudad: String!
+    nombre: String
+    telefono: String
+    email: String
+    direccion: String
+    ciudad: String
+    cedula: String
+    nombres: String
+    apellidos: String
   }
 
   input PorcinoInput {
@@ -61,19 +69,24 @@ const typeDefs = gql`
   }
 
   input AlimentacionInput {
-    tipoComida: String!
-    marca: String!
-    cantidad: Float!
-    precio: Float!
+    tipoComida: String
+    marca: String
+    cantidad: Float
+    precio: Float
+    descripcion: String
+    dosis: String
   }
 
-  # Inputs para actualizar (campos opcionales)
+  # Inputs para actualizar (todos opcionales)
   input ClienteUpdateInput {
     nombre: String
     telefono: String
     email: String
     direccion: String
     ciudad: String
+    cedula: String
+    nombres: String
+    apellidos: String
   }
 
   input PorcinoUpdateInput {
@@ -89,6 +102,8 @@ const typeDefs = gql`
     marca: String
     cantidad: Float
     precio: Float
+    descripcion: String
+    dosis: String
   }
 
   # Queries - Para leer datos
