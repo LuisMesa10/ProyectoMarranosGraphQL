@@ -2,46 +2,52 @@
 // src/apollo/mutations.js
 import { gql } from '@apollo/client/core';
 
-// ============ MUTATIONS (ESCRITURA) ============
+// ============= MUTATIONS (ESCRITURA) =============
 
 // CLIENTES
-export const CREATE_CLIENTE = gql`
-  mutation CreateCliente($input: ClienteInput!) {
+export const CREAR_CLIENTE = gql`
+  mutation CrearCliente($input: ClienteInput!) {
     crearCliente(input: $input) {
       id
       nombre
+      nombres
+      apellidos
       telefono
       email
       direccion
       ciudad
+      cedula
       createdAt
     }
   }
 `;
 
-export const UPDATE_CLIENTE = gql`
-  mutation UpdateCliente($id: ID!, $input: ClienteUpdateInput!) {
+export const ACTUALIZAR_CLIENTE = gql`
+  mutation ActualizarCliente($id: ID!, $input: ClienteUpdateInput!) {
     actualizarCliente(id: $id, input: $input) {
       id
       nombre
+      nombres
+      apellidos
       telefono
       email
       direccion
       ciudad
+      cedula
       updatedAt
     }
   }
 `;
 
-export const DELETE_CLIENTE = gql`
-  mutation DeleteCliente($id: ID!) {
+export const ELIMINAR_CLIENTE = gql`
+  mutation EliminarCliente($id: ID!) {
     eliminarCliente(id: $id)
   }
 `;
 
 // PORCINOS
-export const CREATE_PORCINO = gql`
-  mutation CreatePorcino($input: PorcinoInput!) {
+export const CREAR_PORCINO = gql`
+  mutation CrearPorcino($input: PorcinoInput!) {
     crearPorcino(input: $input) {
       id
       identificacion
@@ -56,15 +62,14 @@ export const CREATE_PORCINO = gql`
       alimentacion {
         id
         tipoComida
-        marca
       }
       createdAt
     }
   }
 `;
 
-export const UPDATE_PORCINO = gql`
-  mutation UpdatePorcino($id: ID!, $input: PorcinoUpdateInput!) {
+export const ACTUALIZAR_PORCINO = gql`
+  mutation ActualizarPorcino($id: ID!, $input: PorcinoUpdateInput!) {
     actualizarPorcino(id: $id, input: $input) {
       id
       identificacion
@@ -72,51 +77,50 @@ export const UPDATE_PORCINO = gql`
       razaNombre
       edad
       peso
-      alimentacion {
-        id
-        tipoComida
-        marca
-      }
       updatedAt
     }
   }
 `;
 
-export const DELETE_PORCINO = gql`
-  mutation DeletePorcino($id: ID!) {
+export const ELIMINAR_PORCINO = gql`
+  mutation EliminarPorcino($id: ID!) {
     eliminarPorcino(id: $id)
   }
 `;
 
 // ALIMENTACIÓN
-export const CREATE_ALIMENTACION = gql`
-  mutation CreateAlimentacion($input: AlimentacionInput!) {
+export const CREAR_ALIMENTACION = gql`
+  mutation CrearAlimentacion($input: AlimentacionInput!) {
     crearAlimentacion(input: $input) {
       id
       tipoComida
       marca
       cantidad
       precio
+      descripcion
+      dosis
       createdAt
     }
   }
 `;
 
-export const UPDATE_ALIMENTACION = gql`
-  mutation UpdateAlimentacion($id: ID!, $input: AlimentacionUpdateInput!) {
+export const ACTUALIZAR_ALIMENTACION = gql`
+  mutation ActualizarAlimentacion($id: ID!, $input: AlimentacionUpdateInput!) {
     actualizarAlimentacion(id: $id, input: $input) {
       id
       tipoComida
       marca
       cantidad
       precio
+      descripcion
+      dosis
       updatedAt
     }
   }
 `;
 
-export const DELETE_ALIMENTACION = gql`
-  mutation DeleteAlimentacion($id: ID!) {
+export const ELIMINAR_ALIMENTACION = gql`
+  mutation EliminarAlimentacion($id: ID!) {
     eliminarAlimentacion(id: $id)
   }
 `;

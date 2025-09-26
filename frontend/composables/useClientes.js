@@ -1,197 +1,165 @@
 
 // src/composables/useClientes.js
-import { ref, computed } from 'vue';
-import { useQuery, useMutation } from '@vue/apollo-composable';
+import { ref, reactive } from 'vue'
+import { useQuery, useMutation } from '@vue/apollo-composable'
+import { GET_CLIENTES, GET_CLIENTE } from '../apollo/queries'
 import { 
-  GET_CLIENTES, 
-  GET_CLIENTE,
-  GET_CLIENTES_CON_PORCINOS 
-} from '@/apollo/queries';
-import { 
-  CREATE_CLIENTE, 
-  UPDATE_CLIENTE, 
-  DELETE_CLIENTE 
-} from '@/apollo/mutations';
+  CREAR_CLIENTE, 
+  ACTUALIZAR_CLIENTE, 
+  ELIMINAR_CLIENTE 
+} from '../apollo/mutations'
 
 export function useClientes() {
-  // Estado reactivo local
-  const loading = ref(false);
-  const error = ref(null);
+  // Estado reactivo
+  const clientes = ref([])
+  const cliente = ref(null)
+  const loading = ref(false)
+  const error = ref(null)
 
-  // ===== QUERIES =====
-
-  // Obtener todos los clientes
-  const { 
-    result: clientesResult, 
+  // Query para obtener todos los clientes
+  const {
+    result: clientesResult,
     loading: clientesLoading,
     error: clientesError,
     refetch: refetchClientes
-  } = useQuery(GET_CLIENTES);
+  } = useQuery(GET_CLIENTES, null, {
+    fetchPolicy: 'cache-and-network'
+  })
 
-  // Computed para obtener la lista de clientes
-  const clientes = computed(() => clientesResult.value?.clientes ?? []);
+  // Mutation para crear cliente
+  const { mutate: crearClienteMutation } = useMutation(CREAR_CLIENTE, {
+    update: (cache, { data: { crearCliente } }) => {
+      // Actualizar cache después de crear
+      const data = cache.readQuery({ query: GET_CLIENTES })
+      cache.writeQuery({
+        query: GET_CLIENTES,
+        data: {
+          clientes: [...(data?.clientes || []), crearCliente]
+        }
+      })
+    }
+  })
 
-  // Obtener clientes con porcinos
-  const { 
-    result: clientesConPorcinosResult,
-    loading: clientesConPorcinosLoading,
-    refetch: refetchClientesConPorcinos
-  } = useQuery(GET_CLIENTES_CON_PORCINOS);
+  // Mutation para actualizar cliente
+  const { mutate: actualizarClienteMutation } = useMutation(ACTUALIZAR_CLIENTE)
 
-  const clientesConPorcinos = computed(() => 
-    clientesConPorcinosResult.value?.clientesConPorcinos ?? []
-  );
-
-  // Función para obtener un cliente específico
-  const obtenerCliente = (id) => {
-    const { result, loading: clienteLoading, error: clienteError } = useQuery(
-      GET_CLIENTE,
-      { id },
-      { 
-        enabled: !!id, // Solo ejecutar si hay ID
-        fetchPolicy: 'cache-first'
-      }
-    );
-
-    return {
-      cliente: computed(() => result.value?.cliente ?? null),
-      loading: clienteLoading,
-      error: clienteError
-    };
-  };
-
-  // ===== MUTATIONS =====
-
-  // Crear cliente
-  const { mutate: crearClienteMutation } = useMutation(CREATE_CLIENTE, {
-    // Actualizar caché después de crear
-    update(cache, { data: { crearCliente } }) {
-      // Leer la query existente del caché
-      const existingClientes = cache.readQuery({ query: GET_CLIENTES });
-
-      if (existingClientes) {
-        // Escribir la nueva data en el caché
+  // Mutation para eliminar cliente
+  const { mutate: eliminarClienteMutation } = useMutation(ELIMINAR_CLIENTE, {
+    update: (cache, { data: { eliminarCliente } }, { variables }) => {
+      if (eliminarCliente) {
+        // Remover del cache
+        const data = cache.readQuery({ query: GET_CLIENTES })
         cache.writeQuery({
           query: GET_CLIENTES,
           data: {
-            clientes: [crearCliente, ...existingClientes.clientes]
+            clientes: data?.clientes?.filter(c => c.id !== variables.id) || []
           }
-        });
+        })
       }
     }
-  });
+  })
 
-  // Actualizar cliente
-  const { mutate: actualizarClienteMutation } = useMutation(UPDATE_CLIENTE);
-
-  // Eliminar cliente
-  const { mutate: eliminarClienteMutation } = useMutation(DELETE_CLIENTE, {
-    // Actualizar caché después de eliminar
-    update(cache, { data: { eliminarCliente } }, { variables }) {
-      if (eliminarCliente) {
-        // Remover del caché
-        cache.evict({ id: cache.identify({ __typename: 'Cliente', id: variables.id }) });
-        cache.gc(); // Limpiar referencias huérfanas
-      }
+  // Funciones helper
+  const obtenerClientes = async () => {
+    try {
+      loading.value = true
+      await refetchClientes()
+      clientes.value = clientesResult.value?.clientes || []
+    } catch (err) {
+      error.value = err.message
+      console.error('Error obteniendo clientes:', err)
+    } finally {
+      loading.value = false
     }
-  });
+  }
 
-  // ===== FUNCIONES DE CONVENIENCIA =====
+  const obtenerCliente = async (id) => {
+    try {
+      loading.value = true
+      const { result } = await useQuery(GET_CLIENTE, { id })
+      cliente.value = result.value?.cliente
+      return cliente.value
+    } catch (err) {
+      error.value = err.message
+      console.error('Error obteniendo cliente:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
 
   const crearCliente = async (clienteData) => {
     try {
-      loading.value = true;
-      error.value = null;
-
+      loading.value = true
       const result = await crearClienteMutation({
         input: clienteData
-      });
+      })
 
-      return result.data.crearCliente;
+      // Refrescar lista
+      await refetchClientes()
+      return result.data.crearCliente
     } catch (err) {
-      error.value = err.message;
-      console.error('Error al crear cliente:', err);
-      throw err;
+      error.value = err.message
+      console.error('Error creando cliente:', err)
+      throw err
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  };
+  }
 
   const actualizarCliente = async (id, clienteData) => {
     try {
-      loading.value = true;
-      error.value = null;
-
+      loading.value = true
       const result = await actualizarClienteMutation({
         id,
         input: clienteData
-      });
+      })
 
-      // Refetch para asegurar datos actualizados
-      await refetchClientes();
-
-      return result.data.actualizarCliente;
+      // Refrescar lista
+      await refetchClientes()
+      return result.data.actualizarCliente
     } catch (err) {
-      error.value = err.message;
-      console.error('Error al actualizar cliente:', err);
-      throw err;
+      error.value = err.message
+      console.error('Error actualizando cliente:', err)
+      throw err
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  };
+  }
 
   const eliminarCliente = async (id) => {
     try {
-      loading.value = true;
-      error.value = null;
-
-      const result = await eliminarClienteMutation({ id });
+      loading.value = true
+      const result = await eliminarClienteMutation({ id })
 
       if (result.data.eliminarCliente) {
-        // Refetch para asegurar datos actualizados
-        await refetchClientes();
-        await refetchClientesConPorcinos();
-        return true;
+        // Refrescar lista
+        await refetchClientes()
+        return true
       }
-
-      return false;
+      return false
     } catch (err) {
-      error.value = err.message;
-      console.error('Error al eliminar cliente:', err);
-      throw err;
+      error.value = err.message
+      console.error('Error eliminando cliente:', err)
+      throw err
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  };
-
-  // Función de utilidad para buscar clientes
-  const buscarClientes = (termino) => {
-    return computed(() => {
-      if (!termino) return clientes.value;
-
-      const terminoLower = termino.toLowerCase();
-      return clientes.value.filter(cliente => 
-        cliente.nombre.toLowerCase().includes(terminoLower) ||
-        cliente.email.toLowerCase().includes(terminoLower) ||
-        cliente.telefono.includes(termino)
-      );
-    });
-  };
+  }
 
   return {
-    // Datos reactivos
-    clientes,
-    clientesConPorcinos,
-    loading: computed(() => loading.value || clientesLoading.value || clientesConPorcinosLoading.value),
-    error: computed(() => error.value || clientesError.value),
+    // Estado
+    clientes: clientesResult,
+    cliente,
+    loading: clientesLoading,
+    error: clientesError,
 
     // Funciones
+    obtenerClientes,
     obtenerCliente,
     crearCliente,
     actualizarCliente,
     eliminarCliente,
-    buscarClientes,
-    refetchClientes,
-    refetchClientesConPorcinos
-  };
+    refetchClientes
+  }
 }

@@ -1,69 +1,53 @@
 
-// src/apollo/apolloClient.js
+// src/apollo/client.js
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client/core';
 
-// Crear el link HTTP que apunta al servidor GraphQL
+// Configurar el enlace HTTP
 const httpLink = createHttpLink({
-  uri: import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:3000/graphql',
+  uri: 'http://localhost:3000/graphql',
+  credentials: 'include'
 });
 
-// Configurar el caché
+// Configurar cache
 const cache = new InMemoryCache({
-  // Configurar políticas de tipo para optimizar el caché
   typePolicies: {
     Cliente: {
       fields: {
         porcinos: {
-          // Merge policy para arrays
-          merge(existing = [], incoming) {
-            return incoming;
-          },
+          merge: false, // Reemplazar en lugar de merge
         },
       },
     },
-    Query: {
+    Porcino: {
       fields: {
-        clientes: {
-          // Política de merge para listas
-          merge(existing = [], incoming) {
-            return incoming;
-          },
+        cliente: {
+          merge: true,
         },
-        porcinos: {
-          merge(existing = [], incoming) {
-            return incoming;
-          },
-        },
-        alimentaciones: {
-          merge(existing = [], incoming) {
-            return incoming;
-          },
+        alimentacion: {
+          merge: true,
         },
       },
     },
   },
 });
 
-// Crear el cliente Apollo
+// Crear cliente Apollo
 const apolloClient = new ApolloClient({
   link: httpLink,
   cache,
-  // Configuraciones adicionales
   defaultOptions: {
     watchQuery: {
-      fetchPolicy: 'cache-and-network',  // Usar caché pero también buscar actualizaciones
-      errorPolicy: 'ignore',
+      errorPolicy: 'all',
+      fetchPolicy: 'cache-and-network',
     },
     query: {
-      fetchPolicy: 'cache-first',
       errorPolicy: 'all',
+      fetchPolicy: 'network-only', // Siempre obtener datos frescos
     },
     mutate: {
       errorPolicy: 'all',
     },
   },
-  // Habilitar herramientas de desarrollo en desarrollo
-  devtools: import.meta.env.MODE === 'development',
 });
 
 export default apolloClient;
