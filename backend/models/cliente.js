@@ -2,46 +2,80 @@
 const mongoose = require('mongoose');
 
 const ClienteSchema = new mongoose.Schema({
+  // Campos básicos - haciendo opcional lo que tu frontend no envía siempre
   nombre: { 
     type: String, 
-    required: [true, 'El nombre es obligatorio'],
-    trim: true
+    required: false,  // Cambiado a opcional temporalmente
+    trim: true,
+    default: ''
   },
   telefono: { 
     type: String, 
-    required: [true, 'El teléfono es obligatorio'],
-    trim: true
+    required: false,  // Cambiado a opcional temporalmente
+    trim: true,
+    default: ''
   },
   email: { 
     type: String, 
-    required: [true, 'El email es obligatorio'],
-    unique: true,  // Solo aquí, no duplicar con index()
+    required: false,  // Cambiado a opcional temporalmente
+    unique: false,     // Cambiado a no único temporalmente
     trim: true,
     lowercase: true,
-    validate: {
-      validator: function(v) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-      },
-      message: 'Email no válido'
-    }
+    default: ''
   },
   direccion: { 
     type: String, 
-    required: [true, 'La dirección es obligatoria'],
-    trim: true
+    required: false,  // Cambiado a opcional temporalmente
+    trim: true,
+    default: ''
   },
   ciudad: { 
     type: String, 
-    required: [true, 'La ciudad es obligatoria'],
-    trim: true
+    required: false,  // Cambiado a opcional temporalmente
+    trim: true,
+    default: ''
+  },
+
+  // CAMPOS ORIGINALES (compatibilidad con tu sistema existente)
+  cedula: { 
+    type: String, 
+    required: false,
+    unique: false,
+    trim: true,
+    default: ''
+  },
+  nombres: { 
+    type: String, 
+    required: false,
+    trim: true,
+    default: ''
+  },
+  apellidos: { 
+    type: String, 
+    required: false,
+    trim: true,
+    default: ''
   }
 }, { 
   timestamps: true,
   collection: 'clientes'
 });
 
-// NO duplicar índices - unique: true ya crea el índice
-// Comentar o eliminar estas líneas si las tienes:
-// ClienteSchema.index({ email: 1 });
+// Middleware pre-save para mapear campos si es necesario
+ClienteSchema.pre('save', function(next) {
+  // Si tienes nombres/apellidos, combinarlos en nombre
+  if (this.nombres && this.apellidos && !this.nombre) {
+    this.nombre = this.nombres + ' ' + this.apellidos;
+  }
+
+  // Si tienes nombre pero no nombres/apellidos, separarlos
+  if (this.nombre && !this.nombres) {
+    const parts = this.nombre.split(' ');
+    this.nombres = parts[0] || '';
+    this.apellidos = parts.slice(1).join(' ') || '';
+  }
+
+  next();
+});
 
 module.exports = mongoose.model('Cliente', ClienteSchema);
