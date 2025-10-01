@@ -1,7 +1,8 @@
+const {
+  gql
+} = require('apollo-server-express');
 
-const { gql } = require('apollo-server-express');
-
-const typeDefs = gql`
+const typeDefs = gql `
   # Tipos de datos
   type Cliente {
     id: ID!
@@ -112,6 +113,8 @@ const typeDefs = gql`
     clientes: [Cliente!]!
     cliente(id: ID!): Cliente
     clientesConPorcinos: [Cliente!]!
+    clientePorCedula(cedula: String!): Cliente
+
 
     # Porcinos
     porcinos: [Porcino!]!
@@ -122,6 +125,8 @@ const typeDefs = gql`
     # Alimentación
     alimentaciones: [Alimentacion!]!
     alimentacion(id: ID!): Alimentacion
+
+
   }
 
   # Mutations - Para crear, actualizar y eliminar datos
@@ -130,6 +135,10 @@ const typeDefs = gql`
     crearCliente(input: ClienteInput!): Cliente!
     actualizarCliente(id: ID!, input: ClienteUpdateInput!): Cliente!
     eliminarCliente(id: ID!): Boolean!
+    actualizarClientePorCedula(cedula: String!, input: ClienteUpdateInput!): Cliente!
+  
+  
+
 
     # Porcinos
     crearPorcino(input: PorcinoInput!): Porcino!

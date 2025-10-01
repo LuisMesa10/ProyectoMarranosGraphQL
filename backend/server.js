@@ -137,7 +137,7 @@ async function startServer() {
 
   try {
     console.log('');
-    console.log('🚀 Iniciando La Granja S.A. API...');
+    console.log(' Iniciando La Granja S.A. API...');
     console.log('');
 
     // Configurar Apollo Server
@@ -145,42 +145,42 @@ async function startServer() {
 
     // Iniciar servidor Express
     const server = app.listen(PORT, () => {
-      console.log('🎉 ==========================================');
-      console.log('🐷 LA GRANJA S.A. - SERVIDOR ACTIVO');
-      console.log('🎉 ==========================================');
+      console.log(' ==========================================');
+      console.log(' LA GRANJA S.A. - SERVIDOR ACTIVO');
+      console.log(' ==========================================');
       console.log('');
-      console.log('🌐 Servidor corriendo en: http://localhost:' + PORT);
+      console.log(' Servidor corriendo en: http://localhost:' + PORT);
       console.log('');
-      console.log('📋 ENDPOINTS REST:');
+      console.log(' ENDPOINTS REST:');
       console.log('   • http://localhost:' + PORT + '/api/clientes');
       console.log('   • http://localhost:' + PORT + '/api/porcinos');
       console.log('   • http://localhost:' + PORT + '/api/alimentacion');
       console.log('');
 
       if (apolloReady) {
-        console.log('🚀 ENDPOINT GRAPHQL:');
+        console.log(' ENDPOINT GRAPHQL:');
         console.log('   • http://localhost:' + PORT + '/graphql');
         console.log('   • Apollo Sandbox funcionará SIN errores de stream');
         console.log('');
       }
 
-      console.log('🎉 ==========================================');
-      console.log('✅ Body parser conflicts RESUELTOS');
-      console.log('🎉 ==========================================');
+      console.log(' ==========================================');
+      console.log(' Body parser conflicts RESUELTOS');
+      console.log(' ==========================================');
       console.log('');
     });
 
     // Manejo de cierre graceful
     process.on('SIGINT', async () => {
-      console.log('\n⏹️  Cerrando servidor...');
+      console.log('\n  Cerrando servidor...');
       server.close();
       await mongoose.connection.close();
-      console.log('✅ Servidor cerrado correctamente');
+      console.log(' Servidor cerrado correctamente');
       process.exit(0);
     });
 
   } catch (error) {
-    console.error('❌ Error fatal al iniciar servidor:', error.message);
+    console.error('Error fatal al iniciar servidor:', error.message);
     process.exit(1);
   }
 }

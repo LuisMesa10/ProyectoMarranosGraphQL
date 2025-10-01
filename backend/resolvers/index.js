@@ -1,4 +1,3 @@
-
 const Cliente = require('../models/cliente');
 const Porcino = require('../models/porcino');
 const Alimentacion = require('../models/alimentacion');
@@ -9,14 +8,16 @@ const resolvers = {
     // ===== CLIENTES =====
     clientes: async () => {
       try {
-        const clientesRaw = await Cliente.find().sort({ createdAt: -1 });
+        const clientesRaw = await Cliente.find().sort({
+          createdAt: -1
+        });
 
         return clientesRaw.map(cliente => {
           const clienteObj = cliente.toObject();
           return {
             id: clienteObj._id.toString(),
-            nombre: clienteObj.nombre || (clienteObj.nombres && clienteObj.apellidos ? 
-              `${clienteObj.nombres} ${clienteObj.apellidos}` : 
+            nombre: clienteObj.nombre || (clienteObj.nombres && clienteObj.apellidos ?
+              `${clienteObj.nombres} ${clienteObj.apellidos}` :
               clienteObj.nombres || clienteObj.apellidos || 'Sin nombre'),
             telefono: clienteObj.telefono || '',
             email: clienteObj.email || '',
@@ -35,7 +36,9 @@ const resolvers = {
       }
     },
 
-    cliente: async (_, { id }) => {
+    cliente: async (_, {
+      id
+    }) => {
       try {
         const cliente = await Cliente.findById(id);
         if (!cliente) {
@@ -45,8 +48,8 @@ const resolvers = {
         const clienteObj = cliente.toObject();
         return {
           id: clienteObj._id.toString(),
-          nombre: clienteObj.nombre || (clienteObj.nombres && clienteObj.apellidos ? 
-            `${clienteObj.nombres} ${clienteObj.apellidos}` : 
+          nombre: clienteObj.nombre || (clienteObj.nombres && clienteObj.apellidos ?
+            `${clienteObj.nombres} ${clienteObj.apellidos}` :
             clienteObj.nombres || clienteObj.apellidos || 'Sin nombre'),
           telefono: clienteObj.telefono || '',
           email: clienteObj.email || '',
@@ -70,13 +73,15 @@ const resolvers = {
         const clientesConPorcinos = [];
 
         for (let cliente of clientes) {
-          const cantidadPorcinos = await Porcino.countDocuments({ clienteId: cliente._id });
+          const cantidadPorcinos = await Porcino.countDocuments({
+            clienteId: cliente._id
+          });
           if (cantidadPorcinos > 0) {
             const clienteObj = cliente.toObject();
             clientesConPorcinos.push({
               id: clienteObj._id.toString(),
-              nombre: clienteObj.nombre || (clienteObj.nombres && clienteObj.apellidos ? 
-                `${clienteObj.nombres} ${clienteObj.apellidos}` : 
+              nombre: clienteObj.nombre || (clienteObj.nombres && clienteObj.apellidos ?
+                `${clienteObj.nombres} ${clienteObj.apellidos}` :
                 clienteObj.nombres || clienteObj.apellidos || 'Sin nombre'),
               telefono: clienteObj.telefono || '',
               email: clienteObj.email || '',
@@ -95,11 +100,22 @@ const resolvers = {
       }
     },
 
+    clientePorCedula: async (parent, {
+      cedula
+    }) => {
+      return await Cliente.findOne({
+        cedula
+      });
+    },
+
+
     // ===== PORCINOS =====
     porcinos: async () => {
       try {
         // NO hacer populate aquí, lo manejaremos en los resolvers específicos
-        const porcinosRaw = await Porcino.find().sort({ createdAt: -1 });
+        const porcinosRaw = await Porcino.find().sort({
+          createdAt: -1
+        });
 
         return porcinosRaw.map(porcino => {
           const porcinoObj = porcino.toObject();
@@ -121,7 +137,9 @@ const resolvers = {
       }
     },
 
-    porcino: async (_, { id }) => {
+    porcino: async (_, {
+      id
+    }) => {
       try {
         const porcino = await Porcino.findById(id);
 
@@ -147,9 +165,15 @@ const resolvers = {
       }
     },
 
-    porcinosPorCliente: async (_, { clienteId }) => {
+    porcinosPorCliente: async (_, {
+      clienteId
+    }) => {
       try {
-        const porcinosRaw = await Porcino.find({ clienteId }).sort({ createdAt: -1 });
+        const porcinosRaw = await Porcino.find({
+          clienteId
+        }).sort({
+          createdAt: -1
+        });
 
         return porcinosRaw.map(porcino => {
           const porcinoObj = porcino.toObject();
@@ -171,9 +195,15 @@ const resolvers = {
       }
     },
 
-    porcinosPorRaza: async (_, { raza }) => {
+    porcinosPorRaza: async (_, {
+      raza
+    }) => {
       try {
-        const porcinosRaw = await Porcino.find({ raza }).sort({ createdAt: -1 });
+        const porcinosRaw = await Porcino.find({
+          raza
+        }).sort({
+          createdAt: -1
+        });
 
         return porcinosRaw.map(porcino => {
           const porcinoObj = porcino.toObject();
@@ -198,7 +228,9 @@ const resolvers = {
     // ===== ALIMENTACIÓN =====
     alimentaciones: async () => {
       try {
-        const alimentacionesRaw = await Alimentacion.find().sort({ createdAt: -1 });
+        const alimentacionesRaw = await Alimentacion.find().sort({
+          createdAt: -1
+        });
 
         return alimentacionesRaw.map(alimentacion => {
           const alimentacionObj = alimentacion.toObject();
@@ -220,7 +252,9 @@ const resolvers = {
       }
     },
 
-    alimentacion: async (_, { id }) => {
+    alimentacion: async (_, {
+      id
+    }) => {
       try {
         const alimentacion = await Alimentacion.findById(id);
         if (!alimentacion) {
@@ -249,9 +283,13 @@ const resolvers = {
   // Mutations - Para crear, actualizar y eliminar
   Mutation: {
     // ===== CLIENTES =====
-    crearCliente: async (_, { input }) => {
+    crearCliente: async (_, {
+      input
+    }) => {
       try {
-        const clienteData = { ...input };
+        const clienteData = {
+          ...input
+        };
 
         if (clienteData.nombre && !clienteData.nombres && !clienteData.apellidos) {
           const partes = clienteData.nombre.split(' ');
@@ -289,12 +327,17 @@ const resolvers = {
       }
     },
 
-    actualizarCliente: async (_, { id, input }) => {
+    actualizarCliente: async (_, {
+      id,
+      input
+    }) => {
       try {
         const cliente = await Cliente.findByIdAndUpdate(
-          id, 
-          input, 
-          { new: true, runValidators: true }
+          id,
+          input, {
+            new: true,
+            runValidators: true
+          }
         );
 
         if (!cliente) {
@@ -321,9 +364,49 @@ const resolvers = {
       }
     },
 
-    eliminarCliente: async (_, { id }) => {
+    actualizarClientePorCedula: async (_, {
+      cedula,
+      input
+    }) => {
       try {
-        const cantidadPorcinos = await Porcino.countDocuments({ clienteId: id });
+        const cliente = await Cliente.findOneAndUpdate({
+            cedula
+          },
+          input, {
+            new: true,
+            runValidators: true
+          }
+        );
+        if (!cliente) {
+          throw new Error('Cliente no encontrado');
+        }
+        const clienteObj = cliente.toObject();
+        return {
+          id: clienteObj._id.toString(),
+          nombre: clienteObj.nombre || `${clienteObj.nombres || ''} ${clienteObj.apellidos || ''}`.trim(),
+          telefono: clienteObj.telefono || '',
+          email: clienteObj.email || '',
+          direccion: clienteObj.direccion || '',
+          ciudad: clienteObj.ciudad || '',
+          nombres: clienteObj.nombres || '',
+          apellidos: clienteObj.apellidos || '',
+          cedula: clienteObj.cedula || '',
+          createdAt: clienteObj.createdAt,
+          updatedAt: clienteObj.updatedAt
+        };
+      } catch (error) {
+        console.error('Error en actualizarClientePorCedula mutation:', error.message);
+        throw new Error('Error al actualizar cliente: ' + error.message);
+      }
+    },
+
+    eliminarCliente: async (_, {
+      id
+    }) => {
+      try {
+        const cantidadPorcinos = await Porcino.countDocuments({
+          clienteId: id
+        });
 
         if (cantidadPorcinos > 0) {
           throw new Error(`No se puede eliminar el cliente porque tiene ${cantidadPorcinos} porcino(s) asociado(s)`);
@@ -342,8 +425,47 @@ const resolvers = {
       }
     },
 
+    actualizarClientePorCedula: async (_, {
+      cedula,
+      input
+    }) => {
+      try {
+        const cliente = await Cliente.findOneAndUpdate({
+            cedula
+          },
+          input, {
+            new: true,
+            runValidators: true
+          }
+        );
+        if (!cliente) {
+          throw new Error('Cliente no encontrado');
+        }
+        const clienteObj = cliente.toObject();
+        return {
+          id: clienteObj._id.toString(),
+          nombre: clienteObj.nombre || `${clienteObj.nombres || ''} ${clienteObj.apellidos || ''}`.trim(),
+          telefono: clienteObj.telefono || '',
+          email: clienteObj.email || '',
+          direccion: clienteObj.direccion || '',
+          ciudad: clienteObj.ciudad || '',
+          nombres: clienteObj.nombres || '',
+          apellidos: clienteObj.apellidos || '',
+          cedula: clienteObj.cedula || '',
+          createdAt: clienteObj.createdAt,
+          updatedAt: clienteObj.updatedAt
+        };
+      } catch (error) {
+        console.error('Error en actualizarClientePorCedula mutation:', error.message);
+        throw new Error('Error al actualizar cliente: ' + error.message);
+      }
+    },
+
+
     // ===== PORCINOS =====
-    crearPorcino: async (_, { input }) => {
+    crearPorcino: async (_, {
+      input
+    }) => {
       try {
         const cliente = await Cliente.findById(input.clienteId);
         if (!cliente) {
@@ -379,7 +501,10 @@ const resolvers = {
       }
     },
 
-    actualizarPorcino: async (_, { id, input }) => {
+    actualizarPorcino: async (_, {
+      id,
+      input
+    }) => {
       try {
         if (input.alimentacionId) {
           const alimentacion = await Alimentacion.findById(input.alimentacionId);
@@ -389,9 +514,11 @@ const resolvers = {
         }
 
         const porcino = await Porcino.findByIdAndUpdate(
-          id, 
-          input, 
-          { new: true, runValidators: true }
+          id,
+          input, {
+            new: true,
+            runValidators: true
+          }
         );
 
         if (!porcino) {
@@ -416,7 +543,9 @@ const resolvers = {
       }
     },
 
-    eliminarPorcino: async (_, { id }) => {
+    eliminarPorcino: async (_, {
+      id
+    }) => {
       try {
         const porcino = await Porcino.findByIdAndDelete(id);
 
@@ -432,9 +561,13 @@ const resolvers = {
     },
 
     // ===== ALIMENTACIÓN =====
-    crearAlimentacion: async (_, { input }) => {
+    crearAlimentacion: async (_, {
+      input
+    }) => {
       try {
-        const alimentacionData = { ...input };
+        const alimentacionData = {
+          ...input
+        };
 
         if (alimentacionData.descripcion && !alimentacionData.tipoComida) {
           alimentacionData.tipoComida = alimentacionData.descripcion;
@@ -469,12 +602,17 @@ const resolvers = {
       }
     },
 
-    actualizarAlimentacion: async (_, { id, input }) => {
+    actualizarAlimentacion: async (_, {
+      id,
+      input
+    }) => {
       try {
         const alimentacion = await Alimentacion.findByIdAndUpdate(
-          id, 
-          input, 
-          { new: true, runValidators: true }
+          id,
+          input, {
+            new: true,
+            runValidators: true
+          }
         );
 
         if (!alimentacion) {
@@ -499,9 +637,13 @@ const resolvers = {
       }
     },
 
-    eliminarAlimentacion: async (_, { id }) => {
+    eliminarAlimentacion: async (_, {
+      id
+    }) => {
       try {
-        const cantidadPorcinos = await Porcino.countDocuments({ alimentacionId: id });
+        const cantidadPorcinos = await Porcino.countDocuments({
+          alimentacionId: id
+        });
 
         if (cantidadPorcinos > 0) {
           throw new Error(`No se puede eliminar la alimentación porque está siendo usada por ${cantidadPorcinos} porcino(s)`);
@@ -525,7 +667,9 @@ const resolvers = {
   Cliente: {
     porcinos: async (cliente) => {
       try {
-        const porcinosRaw = await Porcino.find({ clienteId: cliente.id });
+        const porcinosRaw = await Porcino.find({
+          clienteId: cliente.id
+        });
 
         return porcinosRaw.map(porcino => {
           const porcinoObj = porcino.toObject();
@@ -549,7 +693,9 @@ const resolvers = {
 
     cantidadPorcinos: async (cliente) => {
       try {
-        return await Porcino.countDocuments({ clienteId: cliente.id });
+        return await Porcino.countDocuments({
+          clienteId: cliente.id
+        });
       } catch (error) {
         console.error('Error en Cliente.cantidadPorcinos resolver:', error.message);
         return 0;
@@ -664,7 +810,9 @@ const resolvers = {
   Alimentacion: {
     porcinos: async (alimentacion) => {
       try {
-        const porcinosRaw = await Porcino.find({ alimentacionId: alimentacion.id });
+        const porcinosRaw = await Porcino.find({
+          alimentacionId: alimentacion.id
+        });
 
         return porcinosRaw.map(porcino => {
           const porcinoObj = porcino.toObject();
